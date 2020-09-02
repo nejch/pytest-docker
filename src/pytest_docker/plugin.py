@@ -10,6 +10,15 @@ import attr
 import pytest
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--reuse-containers",
+        action="store_true",
+        default=False,
+        help="Reuse any existing running containers and do not tear them down.",
+    )
+
+
 def execute(command, success_codes=(0,)):
     """Run a shell command."""
     try:
@@ -141,9 +150,12 @@ def docker_compose_project_name():
 
 
 @pytest.fixture(scope="session")
-def docker_cleanup():
+def docker_cleanup(request):
     """Get the docker_compose command to be executed for test clean-up actions.
-     Override this fixture in your tests if you need to change clean-up actions."""
+    Override this fixture in your tests if you need to change clean-up actions."""
+
+    if request.config.getoption("--reuse-containers"):
+        return
 
     return "down -v"
 
